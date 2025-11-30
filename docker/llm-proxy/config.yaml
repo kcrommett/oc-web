@@ -1,0 +1,101 @@
+# docker/llm-proxy/config.yaml
+# LiteLLM Proxy Configuration for OpenCode
+#
+# This proxy handles authentication with LLM providers so the OpenCode
+# backend can make requests without storing API keys.
+#
+# API keys are read from environment variables (set in .env file)
+# The proxy provides an OpenAI-compatible API at port 4000
+
+model_list:
+  # ===================
+  # Anthropic Claude Models
+  # ===================
+  - model_name: claude-sonnet-4-20250514
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-3-5-sonnet-20241022
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-3-5-haiku-20241022
+    litellm_params:
+      model: anthropic/claude-3-5-haiku-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-3-opus-20240229
+    litellm_params:
+      model: anthropic/claude-3-opus-20240229
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # ===================
+  # OpenAI Models
+  # ===================
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4-turbo
+    litellm_params:
+      model: openai/gpt-4-turbo
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: o1
+    litellm_params:
+      model: openai/o1
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: o1-mini
+    litellm_params:
+      model: openai/o1-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: o1-preview
+    litellm_params:
+      model: openai/o1-preview
+      api_key: os.environ/OPENAI_API_KEY
+
+  # ===================
+  # Google Gemini Models
+  # ===================
+  - model_name: gemini-2.0-flash
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-1.5-pro
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-1.5-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+# ===================
+# LiteLLM Settings
+# ===================
+litellm_settings:
+  # Drop unsupported parameters instead of erroring
+  drop_params: true
+  # Disable verbose logging in production
+  set_verbose: false
+  # Enable request/response caching
+  cache: false
+
+# ===================
+# General Settings
+# ===================
+general_settings:
+  # Internal authentication key (set via LITELLM_MASTER_KEY env var)
+  master_key: os.environ/LITELLM_MASTER_KEY

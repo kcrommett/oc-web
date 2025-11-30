@@ -1,0 +1,124 @@
+# docker/docker-compose.yml
+# Production Docker Compose for oc-web 3-container architecture
+#
+# Usage:
+#   cd docker
+#   cp .env.example .env
+#   # Edit .env with your API keys
+#   docker compose up -d
+#
+# Architecture:
+#   - frontend: oc-web UI (exposed on port 3000)
+#   - backend: OpenCode server (internal only)
+#   - llm-proxy: LiteLLM proxy for LLM API calls (internal, holds credentials)
+#
+# Security Model:
+#   API keys exist ONLY in the llm-proxy container. The backend connects
+#   to the proxy as an unauthenticated local endpoint.
+
+name: opencode-web
+
+services:
+  # ===================
+  # LLM Proxy Container
+  # ===================
+  # Handles authentication with LLM providers.
+  # NOT exposed to host - only accessible within Docker network.
+  # This is the ONLY container that has access to API keys.
+  llm-proxy:
+    build:
+      context: ./llm-proxy
+      dockerfile: Dockerfile
+    container_name: opencode-llm-proxy
+    restart: unless-stopped
+    environment:
+      # Provider API keys - set in .env file
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Internal authentication key
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-opencode-internal}
+    networks:
+      - opencode_internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # IMPORTANT: Port 4000 is NOT exposed to host for security
+
+  # ===================
+  # Backend Container
+  # ===================
+  # OpenCode server - connects to LLM proxy without credentials.
+  # Handles AI coding sessions, file operations, and git commands.
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: opencode-backend
+    restart: unless-stopped
+    depends_on:
+      llm-proxy:
+        condition: service_healthy
+    environment:
+      # Point to LLM proxy (no API key needed - proxy handles auth)
+      - OPENCODE_API=http://llm-proxy:4000/v1
+    volumes:
+      # Workspace for repositories (read-write)
+      - ${WORKSPACE_PATH:-~/workspace}:/workspace:rw
+      # Git configuration (read-only)
+      - ~/.gitconfig:/root/.gitconfig:ro
+      # SSH keys for private repo access (read-only)
+      - ~/.ssh:/root/.ssh:ro
+      # OpenCode configuration and sessions (read-write for persistence)
+      - ~/.config/opencode:/root/.config/opencode:rw
+    networks:
+      - opencode_internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4096/config"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    # IMPORTANT: Port 4096 is NOT exposed to host by default
+
+  # ===================
+  # Frontend Container
+  # ===================
+  # oc-web UI - the ONLY container exposed to host.
+  # Proxies API requests to the backend container.
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: opencode-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Backend server URL (internal Docker network)
+      - OPENCODE_SERVER_URL=http://backend:4096
+      # Listen on all interfaces for Docker
+      - OPENCODE_WEB_HOST=0.0.0.0
+      - OPENCODE_WEB_PORT=3000
+      - NODE_ENV=production
+    ports:
+      # Only exposed port - web UI accessible at http://localhost:3000
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - opencode_internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  opencode_internal:
+    driver: bridge
+    # Internal network - containers communicate via service names
+    # e.g., frontend reaches backend at http://backend:4096

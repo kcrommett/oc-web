@@ -166,12 +166,12 @@ docker/
 
 ### Phase 1: Directory Structure and Base Files
 
-- [ ] **1.1** Create docker directory structure
+- [x] **1.1** Create docker directory structure
   ```bash
   mkdir -p docker/{backend,frontend,llm-proxy}
   ```
 
-- [ ] **1.2** Create `.dockerignore` file
+- [x] **1.2** Create `.dockerignore` file
   ```
   # docker/.dockerignore
   node_modules/
@@ -183,11 +183,11 @@ docker/
   .env.local
   ```
 
-- [ ] **1.3** Create `.env.example` with all required variables
+- [x] **1.3** Create `.env.example` with all required variables
 
 ### Phase 2: LLM Proxy Container
 
-- [ ] **2.1** Create `docker/llm-proxy/Dockerfile`
+- [x] **2.1** Create `docker/llm-proxy/Dockerfile`
   ```dockerfile
   # docker/llm-proxy/Dockerfile
   FROM ghcr.io/berriai/litellm:main-latest
@@ -204,7 +204,7 @@ docker/
   CMD ["--config", "/app/config.yaml", "--port", "4000", "--host", "0.0.0.0"]
   ```
 
-- [ ] **2.2** Create `docker/llm-proxy/config.yaml`
+- [x] **2.2** Create `docker/llm-proxy/config.yaml`
   ```yaml
   # docker/llm-proxy/config.yaml
   # LiteLLM Proxy Configuration for OpenCode
@@ -269,11 +269,11 @@ docker/
     master_key: os.environ/LITELLM_MASTER_KEY
   ```
 
-- [ ] **2.3** Validate LiteLLM config with health endpoint
+- [ ] **2.3** Validate LiteLLM config with health endpoint (requires running containers)
 
 ### Phase 3: Backend Container
 
-- [ ] **3.1** Create `docker/backend/Dockerfile`
+- [x] **3.1** Create `docker/backend/Dockerfile`
   ```dockerfile
   # docker/backend/Dockerfile
   # OpenCode Backend Server
@@ -316,44 +316,15 @@ docker/
   CMD ["opencode", "serve", "--port", "4096", "--hostname", "0.0.0.0"]
   ```
 
-- [ ] **3.2** Create OpenCode configuration for proxy integration
+- [x] **3.2** Create OpenCode configuration for proxy integration
   
-  The backend needs an `opencode.json` config that points to the LLM proxy. This will be mounted or generated:
-  
-  ```json
-  {
-    "$schema": "https://opencode.ai/config.json",
-    "provider": {
-      "litellm-proxy": {
-        "api": "http://llm-proxy:4000/v1",
-        "models": {
-          "claude-sonnet-4-20250514": {
-            "name": "Claude Sonnet 4",
-            "limit": { "context": 200000, "output": 8192 }
-          },
-          "claude-3-5-sonnet-20241022": {
-            "name": "Claude 3.5 Sonnet",
-            "limit": { "context": 200000, "output": 8192 }
-          },
-          "gpt-4o": {
-            "name": "GPT-4o",
-            "limit": { "context": 128000, "output": 16384 }
-          }
-        },
-        "options": {
-          "timeout": 300000
-        }
-      }
-    },
-    "model": "litellm-proxy/claude-sonnet-4-20250514"
-  }
-  ```
+  The backend uses the `OPENCODE_API` environment variable to point to the LLM proxy at `http://llm-proxy:4000/v1`. This is configured in docker-compose.yml without needing a separate config file.
 
-- [ ] **3.3** Test backend container can reach LLM proxy
+- [ ] **3.3** Test backend container can reach LLM proxy (requires running containers)
 
 ### Phase 4: Frontend Container
 
-- [ ] **4.1** Create `docker/frontend/Dockerfile`
+- [x] **4.1** Create `docker/frontend/Dockerfile`
   ```dockerfile
   # docker/frontend/Dockerfile
   # OC-Web Frontend
@@ -430,11 +401,11 @@ docker/
   CMD ["bun", "server.ts"]
   ```
 
-- [ ] **4.2** Verify frontend can proxy to backend container
+- [ ] **4.2** Verify frontend can proxy to backend container (requires running containers)
 
 ### Phase 5: Docker Compose Configuration
 
-- [ ] **5.1** Create `docker/docker-compose.yml` (production)
+- [x] **5.1** Create `docker/docker-compose.yml` (production)
   ```yaml
   # docker/docker-compose.yml
   # Production Docker Compose for oc-web 3-container architecture
@@ -550,7 +521,7 @@ docker/
       # Internal network - containers can communicate via service names
   ```
 
-- [ ] **5.2** Create `docker/docker-compose.dev.yml` (development overrides)
+- [x] **5.2** Create `docker/docker-compose.dev.yml` (development overrides)
   ```yaml
   # docker/docker-compose.dev.yml
   # Development overrides for hot reload and debugging
@@ -594,7 +565,7 @@ docker/
         - LITELLM_LOG=DEBUG
   ```
 
-- [ ] **5.3** Create `docker/.env.example`
+- [x] **5.3** Create `docker/.env.example`
   ```bash
   # docker/.env.example
   # OpenCode Web Docker Configuration
@@ -650,7 +621,7 @@ docker/
 
 ### Phase 6: Documentation
 
-- [ ] **6.1** Create `docker/README.md`
+- [x] **6.1** Create `docker/README.md`
   ```markdown
   # Docker Compose Setup for OpenCode Web
 

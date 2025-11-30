@@ -1,0 +1,59 @@
+# docker/.dockerignore
+# Files to exclude from Docker build context
+
+# Dependencies (will be installed in container)
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+
+# Git
+.git/
+.gitignore
+
+# Documentation and planning
+CONTEXT/
+docs/
+*.md
+!README.md
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (should not be in image)
+.env
+.env.local
+.env.*.local
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+coverage/
+
+# Docker files (avoid recursive copy)
+docker/
+Dockerfile*
+docker-compose*.yml
+
+# Temporary files
+.tmp/
+tmp/
+temp/

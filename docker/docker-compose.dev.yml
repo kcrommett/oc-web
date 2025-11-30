@@ -1,0 +1,57 @@
+# docker/docker-compose.dev.yml
+# Development overrides for hot reload and debugging
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Changes from production:
+#   - Frontend runs in dev mode with hot reload
+#   - Source code mounted for live editing
+#   - Backend port exposed for direct debugging
+#   - LiteLLM verbose logging enabled
+
+services:
+  # ===================
+  # Frontend (Development)
+  # ===================
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+      target: deps  # Stop at deps stage for development
+    environment:
+      - NODE_ENV=development
+      - OPENCODE_SERVER_URL=http://backend:4096
+      - OPENCODE_WEB_HOST=0.0.0.0
+      - OPENCODE_WEB_PORT=3000
+    volumes:
+      # Mount source code for hot reload
+      - ..:/app:cached
+      # Exclude node_modules (use container's installed deps)
+      - /app/node_modules
+    # Override command to run dev server
+    command: ["bun", "run", "dev", "--host", "0.0.0.0"]
+    healthcheck:
+      # Dev server may take longer to start
+      start_period: 30s
+
+  # ===================
+  # Backend (Development)
+  # ===================
+  backend:
+    # Expose backend port for direct API debugging
+    ports:
+      - "${BACKEND_DEBUG_PORT:-4096}:4096"
+
+  # ===================
+  # LLM Proxy (Development)
+  # ===================
+  llm-proxy:
+    environment:
+      # Enable verbose logging for debugging
+      - LITELLM_LOG=DEBUG
+      # Keep the API keys from base compose
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-opencode-internal}
