@@ -21,7 +21,10 @@ RUN apk add --no-cache \
     ca-certificates \
     unzip \
     # Required for some npm packages with native bindings
-    libc6-compat
+    libc6-compat \
+    # Required for Bun runtime
+    libstdc++ \
+    libgcc
 
 # Install Bun
 ENV BUN_INSTALL=/usr/local
@@ -31,7 +34,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 RUN bun --version
 
 # Install OpenCode globally
-RUN bun install -g opencode
+RUN bun install -g opencode-ai
 
 # Create necessary directories
 RUN mkdir -p /workspace /root/.config/opencode

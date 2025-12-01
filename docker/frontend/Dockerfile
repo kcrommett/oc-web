@@ -19,8 +19,9 @@ WORKDIR /app
 # Copy package files for dependency installation
 COPY package.json bun.lock* ./
 
-# Install dependencies (frozen lockfile for reproducible builds)
-RUN bun install --frozen-lockfile
+# Install dependencies
+# Note: Use --frozen-lockfile in CI/production when lockfile is stable
+RUN bun install
 
 # ====================
 # Stage 2: Builder
